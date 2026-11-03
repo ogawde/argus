@@ -1,0 +1,60 @@
+# Draft Blueprint — connect your Render account and deploy from the dashboard
+# or `render blueprint`. Suspend after Phase 2 smoke to save cost until Phase 6.
+services:
+  - type: web
+    name: argus-web
+    runtime: docker
+    plan: standard # ≥1 GB RAM recommended (Next + embeddings)
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DEMO_MODE
+        value: "true"
+      - key: DEMO_AUTH
+        value: "true"
+      - key: DEMO_CYCLE_DATE
+        value: "2026-10-28"
+      - key: LLM_MODE
+        value: cached
+      - key: PAYPAL_WEBHOOK_VERIFY
+        value: strict
+      - key: EMBEDDING_PROVIDER
+        value: local
+      - key: EMBEDDING_MODEL_DIMS
+        value: "384"
+      - key: ES_INDEX_VERSION
+        value: v1
+      - key: DATABASE_URL
+        fromDatabase:
+          name: argus-postgres
+          property: connectionString
+      # Set after first deploy to http://<argus-elasticsearch private hostname>:9200
+      - key: ELASTICSEARCH_URL
+        sync: false
+      - key: SESSION_SECRET
+        generateValue: true
+      # Set to https://<argus-web>.onrender.com after deploy
+      - key: APP_BASE_URL
+        sync: false
+      # Paste PayPal / OpenRouter secrets in the Render dashboard (do not commit):
+      # PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET, PAYPAL_WEBHOOK_ID, SANDBOX_RECEIVER_POOL,
+      # OPENROUTER_API_KEY, TUNNEL_BASE_URL
+
+
+  - type: pserv
+    name: argus-elasticsearch
+    runtime: docker
+    plan: standard # ≥2 GB
+    dockerfilePath: ./deploy/elasticsearch.Dockerfile
+    disk:
+      name: argus-es-data
+      mountPath: /usr/share/elasticsearch/data
+      sizeGB: 10
+
+databases:
+  - name: argus-postgres
+    plan: basic_256mb # upgrade if free tier expires — VERIFY current Render policy
+    databaseName: argus
+    user: argus

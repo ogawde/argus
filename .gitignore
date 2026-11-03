@@ -1,0 +1,46 @@
+# Specs & private notes (never commit)
+context_files/
+docs/
+
+# Env / secrets
+.env
+.env.*
+.env.example.*
+.env.example.sandbox.*
+
+# Dependencies & build
+node_modules/
+.next/
+out/
+dist/
+*.tsbuildinfo
+next-env.d.ts
+
+# Caches & models
+.cache/
+.turbo/
+
+# OS / editor
+.DS_Store
+*:Zone.Identifier
+*.pem
+.idea/
+.vscode/
+
+# Test / coverage
+coverage/
+playwright-report/
+test-results/
+
+# Prisma
+prisma/*.db
+prisma/*.db-journal
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Local uploads / webhook spike captures may contain PII
+.data/
+docs/NOTES/webhook-samples/

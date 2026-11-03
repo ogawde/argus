@@ -1,0 +1,182 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum RunStatus {
+  DRAFT
+  PLANNING
+  FLAGGED
+  READY
+  APPROVED
+  APPLYING
+  RECONCILED
+  REJECTED
+  FAILED
+}
+
+model Payee {
+  id                     String    @id
+  legalName              String
+  displayName            String
+  country                String?
+  destinationValue       String
+  destinationFingerprint String
+  createdAt              DateTime
+  destinationChangedAt   DateTime?
+  sandboxRemap           Boolean   @default(true)
+  version                Int       @default(1)
+
+  @@index([destinationFingerprint])
+}
+
+model HistoricalPayout {
+  id                     String   @id @default(cuid())
+  payeeId                String
+  destinationFingerprint String
+  amountMinor            Int
+  currency               String
+  paidAt                 DateTime
+  batchRef               String
+
+  @@index([payeeId, paidAt])
+}
+
+model PayoutRun {
+  id                    String    @id @default(cuid())
+  status                RunStatus @default(DRAFT)
+  preparedById          String
+  cycleDate             DateTime
+  sourceFilename        String
+  sourceSha256          String
+  currentPlanHash       String?
+  payeeMasterVersion    Int
+  reconciliationOutcome String?
+  lastError             Json?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  rowVersion            Int       @default(0)
+
+  @@index([sourceSha256])
+}
+
+model PlanRevision {
+  id           String   @id @default(cuid())
+  runId        String
+  hash         String
+  parentHash   String?
+  planJson     Json
+  analysisHash String?
+  analysisJson Json?
+  createdById  String
+  createdAt    DateTime @default(now())
+
+  @@unique([runId, hash])
+  @@index([hash])
+}
+
+model Flag {
+  id        String  @id @default(cuid())
+  runId     String
+  planHash  String
+  lineId    String
+  ruleId    String
+  severity  String
+  blocking  Boolean
+  evidence  Json
+  rationale Json?
+
+  @@unique([runId, planHash, lineId, ruleId])
+}
+
+model Disposition {
+  id      String   @id @default(cuid())
+  runId   String
+  ruleId  String
+  lineId  String
+  action  String
+  reason  String
+  actorId String
+  at      DateTime @default(now())
+
+  @@unique([runId, lineId, ruleId])
+}
+
+model Approval {
+  id           String   @id @default(cuid())
+  runId        String   @unique
+  planHash     String
+  analysisHash String
+  approverId   String
+  at           DateTime @default(now())
+}
+
+model AppliedPlan {
+  planHash String   @id
+  runId    String   @unique
+  at       DateTime @default(now())
+}
+
+model ApplyAttempt {
+  id            String   @id @default(cuid())
+  runId         String   @unique
+  planHash      String
+  senderBatchId String   @unique
+  requestBody   Json
+  status        String
+  paypalBatchId String?
+  httpStatus    Int?
+  error         Json?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model PayoutItem {
+  id             String    @id @default(cuid())
+  runId          String
+  lineId         String
+  senderItemId   String    @unique
+  paypalItemId   String?
+  status         String
+  payeeId        String?
+  amountMinor    Int
+  receiverActual String
+  lastEventAt    DateTime?
+  source         String?
+
+  @@index([runId])
+  @@index([payeeId])
+}
+
+model WebhookEvent {
+  eventId         String    @id
+  eventType       String
+  resourceId      String?
+  verified        Boolean
+  payload         Json
+  receivedAt      DateTime  @default(now())
+  processedAt     DateTime?
+  processingError String?
+}
+
+model AuditEvent {
+  seq      BigInt   @id @default(autoincrement())
+  at       DateTime @default(now())
+  actorId  String
+  type     String
+  runId    String?
+  data     Json
+  prevHash String
+  hash     String
+}
+
+model AnalysisCache {
+  key       String   @id
+  kind      String
+  value     Json
+  createdAt DateTime @default(now())
+}

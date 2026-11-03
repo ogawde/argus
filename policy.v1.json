@@ -1,0 +1,43 @@
+{
+  "version": "policy.v1",
+  "newPayee": {
+    "defaultSeverity": "WARN",
+    "escalateAmountVsBatchP95Multiplier": 3,
+    "escalateSeverity": "CRITICAL"
+  },
+  "destinationChanged": {
+    "windowDays": 14,
+    "severity": "CRITICAL",
+    "blocking": true
+  },
+  "amountDeviation": {
+    "zScoreThreshold": 6,
+    "absoluteMultipleOfMedian": 10,
+    "criticalZScore": 6,
+    "warnZScore": 4
+  },
+  "duplicateInBatch": {
+    "severity": "CRITICAL",
+    "blocking": true
+  },
+  "duplicatePaymentWindow": {
+    "severity": "CRITICAL",
+    "blocking": true
+  },
+  "dormantReactivation": {
+    "idleDays": 180,
+    "severity": "WARN",
+    "blocking": false
+  },
+  "batchTotalDeviation": {
+    "warnZScore": 3,
+    "infoZScore": 2
+  },
+  "csv": {
+    "maxRows": 5000,
+    "maxBytes": 1048576
+  },
+  "er": {
+    "recentDays": 30
+  }
+}
