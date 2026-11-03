@@ -53,6 +53,9 @@ COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/policy.v1.json ./policy.v1.json
 COPY --from=builder /app/data ./data
 COPY --from=builder /app/scripts ./scripts
+# Seed / CLI scripts import domain modules via relative paths
+COPY --from=builder /app/src ./src
+COPY --from=builder /app/tsconfig.json ./tsconfig.json
 # Transformers.js cache if warm succeeded
 COPY --from=builder /root/.cache /root/.cache
 
