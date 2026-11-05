@@ -1,19 +1,26 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Fraunces, Instrument_Sans, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+// Display serif for headlines, a friendly grotesque for UI text, mono for money and hashes.
+const display = Fraunces({
+  variable: "--font-argus-display",
+  subsets: ["latin"],
+  axes: ["opsz"],
+});
+
+const body = Instrument_Sans({
+  variable: "--font-argus-body",
   subsets: ["latin"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const mono = JetBrains_Mono({
+  variable: "--font-argus-mono",
   subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
-  title: "Argus",
+  title: "Argus — plan before you pay",
   description: "Plan before you pay — batch payout review and apply",
 };
 
@@ -24,7 +31,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+      <body className={`${display.variable} ${body.variable} ${mono.variable} antialiased`}>
         {children}
       </body>
     </html>

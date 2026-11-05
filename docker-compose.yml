@@ -50,6 +50,10 @@ services:
         condition: service_healthy
     ports:
       - "3000:3000"
+    environment:
+      DATABASE_URL: postgresql://argus:argus@postgres:5432/argus
+      ELASTICSEARCH_URL: http://elasticsearch:9200
+    command: ["sh", "-c", "pnpm exec prisma migrate deploy && pnpm seed:demo && pnpm start"]
 
 volumes:
   pgdata: {}

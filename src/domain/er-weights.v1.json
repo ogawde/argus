@@ -1,0 +1,18 @@
+{
+  "version": "er.v1",
+  "bias": -8.54,
+  "weights": {
+    "vecCos": 6.04,
+    "nameJW": 4.08,
+    "nameTokenSort": 1.54,
+    "nameNearIdentical": 1.67,
+    "emailLocalSim": 0,
+    "sameDestination": 1.12,
+    "countryMismatchPenalty": 8.1
+  },
+  "caps": {
+    "suffixConflictMax": 0.5,
+    "countryMismatchMax": 0.6,
+    "countryMismatchEmailSimBelow": 0.4
+  }
+}

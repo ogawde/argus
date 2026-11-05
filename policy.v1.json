@@ -33,6 +33,19 @@
     "warnZScore": 3,
     "infoZScore": 2
   },
+  "velocity": {
+    "burstDays": 14,
+    "burstMin": 3,
+    "cadenceMultiplier": 3,
+    "lookbackDays": 365,
+    "severity": "WARN",
+    "blocking": false
+  },
+  "sharedDestination": {
+    "enabled": true,
+    "severity": "CRITICAL",
+    "blocking": true
+  },
   "csv": {
     "maxRows": 5000,
     "maxBytes": 1048576

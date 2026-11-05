@@ -36,6 +36,23 @@ const PolicySchema = z.object({
     warnZScore: z.number(),
     infoZScore: z.number(),
   }),
+  velocity: z
+    .object({
+      burstDays: z.number().int().positive(),
+      burstMin: z.number().int().positive(),
+      cadenceMultiplier: z.number().positive(),
+      lookbackDays: z.number().int().positive(),
+      severity: z.enum(["INFO", "WARN", "CRITICAL"]),
+      blocking: z.boolean(),
+    })
+    .refine((v) => v.lookbackDays > v.burstDays, {
+      message: "velocity.lookbackDays must be greater than burstDays",
+    }),
+  sharedDestination: z.object({
+    enabled: z.boolean(),
+    severity: z.enum(["INFO", "WARN", "CRITICAL"]),
+    blocking: z.boolean(),
+  }),
   csv: z.object({
     maxRows: z.number().int().positive(),
     maxBytes: z.number().int().positive(),

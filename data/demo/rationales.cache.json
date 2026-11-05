@@ -1,0 +1,164 @@
+{
+  "rationale:sha256:2a68d0109582bde3b3a905fff62ff662ae5503ad5616edad7bef68d380380684": {
+    "summary": "Payout line flagged for dormancy reactivation after 333 idle days, exceeding the 180‑day threshold. Last payment recorded on 2025‑11‑28.",
+    "assessment": "LIKELY_FRAUD",
+    "citedEvidenceKeys": [
+      "idleDays",
+      "thresholdDays",
+      "lastPaidAt"
+    ],
+    "model": "nvidia/nemotron-3.5-lightning:free",
+    "promptVersion": "v1",
+    "generatedAt": "2026-11-05T05:14:10.104Z",
+    "unverifiedCitations": false
+  },
+  "rationale:sha256:2c0f89ceda25581c76b738fc5c139a6e54859bf3db6c3dfb23f2f195183ca29f": {
+    "summary": "The payout line matches John Doe (P-0118) with a 0.967 fuzzy name similarity and 0.921 overall match score. The profile was created 900 days ago with 12 payouts, last paid 2026-09-28. Email local-part similarity is 0.545. The match was found via vector+fuzzyName. The amount matc…",
+    "assessment": "LIKELY_FRAUD",
+    "citedEvidenceKeys": [
+      "er.fuzzyName",
+      "er.score",
+      "er.matchedProfile",
+      "er.emailLocal",
+      "er.vector",
+      "er.matchedPayee"
+    ],
+    "model": "nvidia/nemotron-3.5-lightning:free",
+    "promptVersion": "v1",
+    "generatedAt": "2026-11-05T05:15:56.130Z",
+    "unverifiedCitations": true
+  },
+  "rationale:sha256:33583e4027e73baffa7fd4987d4e97da3f093bc6148ab7eb41e5a10b9ba7d270": {
+    "summary": "Payout amount of 45,000 is over 10 times the historical median of 4,440, with a robust z-score of 243.18 and 12 prior transactions recorded.",
+    "assessment": "LIKELY_FRAUD",
+    "citedEvidenceKeys": [
+      "absMultiple",
+      "amountMinor",
+      "historyCount",
+      "medianMinor",
+      "robustZ"
+    ],
+    "model": "nvidia/nemotron-3.5-lightning:free",
+    "promptVersion": "v1",
+    "generatedAt": "2026-11-05T05:14:10.882Z",
+    "unverifiedCitations": false
+  },
+  "rationale:sha256:4ada6e5b76b090e628b9bacccf29d72438490535c3cf51bb1d70800889b9eb7f": {
+    "summary": "Payout of 2250 minor units flagged under NEW_PAYEE rule; payee ref P-0301. Batch p95 is 2075 minor units, below the escalation threshold of p95×3.",
+    "assessment": "LIKELY_BENIGN",
+    "citedEvidenceKeys": [
+      "amountMinor",
+      "batchP95",
+      "escalated",
+      "payeeRef"
+    ],
+    "model": "nvidia/nemotron-3.5-lightning:free",
+    "promptVersion": "v1",
+    "generatedAt": "2026-11-05T05:14:08.121Z",
+    "unverifiedCitations": false
+  },
+  "rationale:sha256:536572901ba430fd344133ec42a2d93d9a49b9011fd906c80f703355bc76fd25": {
+    "summary": "Payout line flagged for duplicate occurrence in batch with amount 1100 and payee reference P-0075.",
+    "assessment": "LIKELY_FRAUD",
+    "citedEvidenceKeys": [
+      "amountMinor",
+      "occurrence",
+      "payeeRef"
+    ],
+    "model": "nvidia/nemotron-3.5-lightning:free",
+    "promptVersion": "v1",
+    "generatedAt": "2026-11-05T05:14:09.384Z",
+    "unverifiedCitations": false
+  },
+  "rationale:sha256:54e48586d26404ef9e66c90d7683edc87b6712b53dabe3e76120b4773ecccdff": {
+    "summary": "A 14-day burst window shows 4 payouts with a minor total of 4750, exceeding the historic weekly cadence of 0.24 by a multiplier of 3. The burst minimum is 3 payouts per week.",
+    "assessment": "SUSPICIOUS",
+    "citedEvidenceKeys": [
+      "burstDays",
+      "burstMin",
+      "burstStart",
+      "burstWeeklyRate",
+      "cadenceMultiplier",
+      "historicWeeklyCadence",
+      "recentCount",
+      "recentTotalMinor"
+    ],
+    "model": "nvidia/nemotron-3.5-lightning:free",
+    "promptVersion": "v1",
+    "generatedAt": "2026-11-05T05:14:10.668Z",
+    "unverifiedCitations": false
+  },
+  "rationale:sha256:5531fe706a2bb8361c3f22dc5f6828f7fd098f433390b691363ee0fd7f622257": {
+    "summary": "Payout of 30000 minor units flagged by NEW_PAYEE rule; batch p95 is 2075 minor units, escalated against p95×3 threshold, payee reference P-0302.",
+    "assessment": "LIKELY_FRAUD",
+    "citedEvidenceKeys": [
+      "amountMinor",
+      "batchP95",
+      "escalated",
+      "payeeRef"
+    ],
+    "model": "nvidia/nemotron-3.5-lightning:free",
+    "promptVersion": "v1",
+    "generatedAt": "2026-11-05T05:14:08.546Z",
+    "unverifiedCitations": false
+  },
+  "rationale:sha256:96585350bbc10b8c36590b3a34a017ae852b956ced08197bbe2dbb1a950ae14b": {
+    "summary": "Fuzzy name similarity 0.855 and vector similarity 0.782 flagged a match to payee Mohammed Al-Rashid (P-0220). The profile was created 780 days ago with 12 payouts, last paid 2026-09-28. Email local-part similarity is 0.588. No same destination match. Score 0.734 exceeds the WARN…",
+    "assessment": "SUSPICIOUS",
+    "citedEvidenceKeys": [
+      "er.fuzzyName",
+      "er.vector",
+      "er.matchedPayee",
+      "er.matchedProfile",
+      "er.emailLocal",
+      "er.score",
+      "er.sameDestination"
+    ],
+    "model": "nvidia/nemotron-3.5-lightning:free",
+    "promptVersion": "v1",
+    "generatedAt": "2026-11-05T05:15:56.589Z",
+    "unverifiedCitations": false
+  },
+  "rationale:sha256:97d8bc859c75939c672f2e938953b70bd88a4ddc04951e64115ba7f5bcbf78a9": {
+    "summary": "Payout line flagged for destination change 2 days before cycle. New address is priya.nair.work@example.net, different from previous priya.nair@example.com.",
+    "assessment": "SUSPICIOUS",
+    "citedEvidenceKeys": [
+      "changedAt",
+      "daysBeforeCycle",
+      "newDestination",
+      "previousDestination"
+    ],
+    "model": "nvidia/nemotron-3.5-lightning:free",
+    "promptVersion": "v1",
+    "generatedAt": "2026-11-05T05:14:09.021Z",
+    "unverifiedCitations": false
+  },
+  "rationale:sha256:cd0e1731912b083601d93bb091e5e7ad07b70e1e897e868e07f7af62a95800e9": {
+    "summary": "Payout of 1400 minor units flagged under NEW_PAYEE rule. Payee reference P-0303. Batch p95 is 2075 minor units; amount is below p95. Not escalated vs p95×3.",
+    "assessment": "LIKELY_BENIGN",
+    "citedEvidenceKeys": [
+      "amountMinor",
+      "batchP95",
+      "escalated",
+      "payeeRef"
+    ],
+    "model": "nvidia/nemotron-3.5-lightning:free",
+    "promptVersion": "v1",
+    "generatedAt": "2026-11-05T05:14:08.563Z",
+    "unverifiedCitations": false
+  },
+  "rationale:sha256:f2878ddbd05926046caa5a1c77285edf1e078e4adee51a5b179370dcf8e179da": {
+    "summary": "Two payees (P-0088, P-0089) share a single destination fingerprint. The batch contains 2 lines directed to that destination.",
+    "assessment": "SUSPICIOUS",
+    "citedEvidenceKeys": [
+      "payeeCount",
+      "payeeIds",
+      "batchLineCount",
+      "destinationFingerprint"
+    ],
+    "model": "nvidia/nemotron-3.5-lightning:free",
+    "promptVersion": "v1",
+    "generatedAt": "2026-11-05T05:14:11.682Z",
+    "unverifiedCitations": false
+  }
+}

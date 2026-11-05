@@ -106,7 +106,38 @@ async function main() {
       process.exitCode = 1;
       return;
     }
-    console.log("  contract check    : OK");
+    console.log("  phase-2 contract  : OK");
+
+    // committed LLM rationales -> AnalysisCache (LLM_MODE=cached reads them)
+    const { loadRationaleCache } = await import("./load-rationales");
+    const rationaleCount = await loadRationaleCache(prisma);
+    console.log(`  rationale cache   : ${rationaleCount} entries loaded`);
+
+    // Phase 3: mirror Postgres into Elastic (needs ES + the embedding model)
+    const { getEmbeddingProvider } = await import("../../src/server/embeddings");
+    const { reindexElastic } = await import("../../src/server/elastic/ingest");
+    console.log("  elastic           : loading embedding model + indexing...");
+    const elastic = await reindexElastic({ payees, history, provider: getEmbeddingProvider() });
+    console.log(`  elastic history   : ${elastic.historyCount} docs (payout-history)`);
+    console.log(`  elastic identities: ${elastic.identityCount} docs (payee-identities)`);
+    if (elastic.historyCount !== history.length || elastic.identityCount !== payees.length) {
+      console.error("Elastic doc counts do not match Postgres");
+      process.exitCode = 1;
+      return;
+    }
+
+    // Phase 3: plan the October CSV with ES|QL + ER rules and check the full BRIEF §9 flag set
+    const { verifyDemoDataPhase3 } = await import("./verify-phase3");
+    const phase3 = await verifyDemoDataPhase3({ csvText: dataset.csvText, cycleDate });
+    console.log(`  phase-3 flags (${phase3.flagCount}) on ${phase3.distinctFlaggedLines} lines (${phase3.collectMs} ms):`);
+    for (const key of phase3.flaggedLines) console.log(`    ${key}`);
+    if (phase3.failures.length > 0) {
+      console.error("\nSeed does NOT match BRIEF §9 (Phase 3):");
+      for (const f of phase3.failures) console.error(`  - ${f}`);
+      process.exitCode = 1;
+      return;
+    }
+    console.log("  contract check    : OK (full BRIEF §9, 10 flagged lines)");
   } finally {
     await prisma.$disconnect();
   }

@@ -19,7 +19,13 @@ export function ruleDuplicatePaymentWindow(ctx: RuleContext): Flag[] {
         h.paidAt >= cycleStart &&
         h.paidAt < cycleEnd,
     );
-    if (!hit) continue;
+    const other = (ctx.otherRunItems ?? []).find(
+      (item) =>
+        item.payeeId === line.payeeId &&
+        item.amountMinor === line.amount.minor &&
+        item.currency === line.amount.currency,
+    );
+    if (!hit && !other) continue;
 
     flags.push({
       lineId: line.lineId,
@@ -28,8 +34,16 @@ export function ruleDuplicatePaymentWindow(ctx: RuleContext): Flag[] {
       blocking: ctx.policy.duplicatePaymentWindow.blocking,
       evidence: [
         { key: "amountMinor", label: "Amount (minor)", value: line.amount.minor },
-        { key: "priorPaidAt", label: "Prior paid at", value: hit.paidAt.toISOString() },
-        { key: "priorBatchRef", label: "Prior batch", value: hit.batchRef },
+        {
+          key: "priorPaidAt",
+          label: "Prior paid at",
+          value: hit ? hit.paidAt.toISOString() : "other-run",
+        },
+        {
+          key: "priorBatchRef",
+          label: "Prior batch",
+          value: hit?.batchRef ?? other?.runId ?? "",
+        },
       ],
       relatedLineIds: [],
     });

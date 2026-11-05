@@ -7,6 +7,9 @@ import { canTransition } from "@/domain/state";
 import { appendAudit } from "@/server/audit";
 import { getCurrentActor } from "@/server/auth/demo";
 import { prisma } from "@/server/db";
+import { attachRationales } from "@/server/planning/attach-rationales";
+import { collectAllFlags } from "@/server/planning/collect-flags";
+import { loadBaseline } from "@/server/planning/context";
 import { hasOpenBlockingFlags, saveRevision } from "@/server/planning/save-revision";
 import { fail, ok, type ActionResult } from "@/server/actions/result";
 
@@ -40,7 +43,29 @@ export async function dispositionFlag(
     return fail("BAD_INPUT", "A batch-level flag can only be accepted.");
   }
 
-  return prisma.$transaction(
+  // For EXCLUDED we need Elastic/ER I/O before the transaction.
+  let nextFlags: Awaited<ReturnType<typeof collectAllFlags>> | null = null;
+  let nextPlanJson: ReturnType<typeof applyExclusions> | null = null;
+
+  if (action === "EXCLUDED") {
+    const run = await prisma.payoutRun.findUnique({ where: { id: runId } });
+    if (!run) return fail("NOT_FOUND", "Run not found.");
+    if (!run.currentPlanHash) return fail("BAD_STATE", "Run has no plan yet.");
+    const revision = await prisma.planRevision.findUnique({
+      where: { runId_hash: { runId, hash: run.currentPlanHash } },
+    });
+    if (!revision) return fail("BAD_STATE", "Current plan revision is missing.");
+    const plan = PlanFileSchema.parse(revision.planJson);
+    nextPlanJson = applyExclusions(plan, new Set([lineId]), run.currentPlanHash);
+    const baseline = await loadBaseline(prisma);
+    nextFlags = await collectAllFlags({
+      plan: nextPlanJson,
+      cycleDate: run.cycleDate,
+      baseline,
+    });
+  }
+
+  const result = await prisma.$transaction(
     async (tx) => {
       const run = await tx.payoutRun.findUnique({ where: { id: runId } });
       if (!run) return fail("NOT_FOUND", "Run not found.");
@@ -51,11 +76,12 @@ export async function dispositionFlag(
       if (!currentHash) return fail("BAD_STATE", "Run has no plan yet.");
 
       const flag = await tx.flag.findUnique({
-        where: { runId_planHash_lineId_ruleId: { runId, planHash: currentHash, lineId, ruleId } },
+        where: {
+          runId_planHash_lineId_ruleId: { runId, planHash: currentHash, lineId, ruleId },
+        },
       });
       if (!flag) return fail("NO_SUCH_FLAG", "That flag is not on the current plan.");
 
-      // Compare-and-set first: if it fails nothing else has been written yet.
       const claimed = await tx.payoutRun.updateMany({
         where: { id: runId, rowVersion: run.rowVersion },
         data: { rowVersion: { increment: 1 } },
@@ -69,18 +95,12 @@ export async function dispositionFlag(
       });
 
       let newHash = currentHash;
-      if (action === "EXCLUDED") {
-        const revision = await tx.planRevision.findUnique({
-          where: { runId_hash: { runId, hash: currentHash } },
-        });
-        if (!revision) throw new Error("current plan revision is missing");
-        const plan = PlanFileSchema.parse(revision.planJson);
-        const nextPlan = applyExclusions(plan, new Set([lineId]), currentHash);
+      if (action === "EXCLUDED" && nextPlanJson && nextFlags) {
         const saved = await saveRevision(tx, {
           runId,
-          plan: nextPlan,
+          plan: nextPlanJson,
           actorId: actor.id,
-          cycleDate: run.cycleDate,
+          flags: nextFlags,
         });
         newHash = saved.hash;
       }
@@ -106,6 +126,16 @@ export async function dispositionFlag(
     },
     { timeout: 60_000, maxWait: 10_000 },
   );
+
+  if (result.ok && action === "EXCLUDED" && nextFlags) {
+    try {
+      await attachRationales(runId, result.data.planHash, nextFlags);
+    } catch {
+      /* optional */
+    }
+  }
+
+  return result;
 }
 
 /** Accept every non-blocking flag on the current plan that has no disposition yet. */

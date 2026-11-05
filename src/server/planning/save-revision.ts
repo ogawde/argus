@@ -1,42 +1,27 @@
 import type { Prisma } from "@prisma/client";
 import { planHash } from "@/domain/hash";
 import type { Flag, PlanFile } from "@/domain/plan";
-import { loadPolicy } from "@/domain/policy";
-import { analysisHash, buildAnalysis, runPhase2Rules } from "@/domain/rules/engine";
-import { loadBaseline, makeRuleContext } from "@/server/planning/context";
+import { analysisHash } from "@/domain/rules/engine";
+import { analysisForPlan } from "@/server/planning/collect-flags";
 
 const CLOSING_ACTIONS = ["ACCEPTED", "EXCLUDED"];
 
 /**
- * Analysis is hashed with canonicalize(), which only allows integers.
- * Some rules put decimals (robust z, half-integer medians) or Infinity in evidence,
- * so store those as strings before hashing / saving.
- */
-function withSafeEvidence(flags: Flag[]): Flag[] {
-  return flags.map((flag) => ({
-    ...flag,
-    evidence: flag.evidence.map((item) =>
-      typeof item.value === "number" && !Number.isSafeInteger(item.value)
-        ? { ...item, value: String(item.value) }
-        : item,
-    ),
-  }));
-}
-
-/**
- * Run the rules for a plan, then store the PlanRevision and its Flag rows.
+ * Persist a PlanRevision + Flag rows for an already-computed flag list.
  * Does NOT touch the run row — the caller updates status / currentPlanHash.
  */
 export async function saveRevision(
   tx: Prisma.TransactionClient,
-  args: { runId: string; plan: PlanFile; actorId: string; cycleDate: Date },
+  args: {
+    runId: string;
+    plan: PlanFile;
+    actorId: string;
+    flags: Flag[];
+  },
 ): Promise<{ hash: string; flagCount: number }> {
-  const { runId, plan, actorId, cycleDate } = args;
+  const { runId, plan, actorId, flags } = args;
   const hash = planHash(plan);
-
-  const baseline = await loadBaseline(tx);
-  const flags = withSafeEvidence(runPhase2Rules(makeRuleContext(plan, cycleDate, baseline)));
-  const analysis = buildAnalysis(hash, flags, loadPolicy().version);
+  const analysis = analysisForPlan(hash, flags);
 
   const revisionData = {
     runId,
@@ -50,7 +35,12 @@ export async function saveRevision(
   await tx.planRevision.upsert({
     where: { runId_hash: { runId, hash } },
     create: revisionData,
-    update: { analysisHash: revisionData.analysisHash, analysisJson: revisionData.analysisJson },
+    update: {
+      analysisHash: revisionData.analysisHash,
+      analysisJson: revisionData.analysisJson,
+      planJson: revisionData.planJson,
+      parentHash: revisionData.parentHash,
+    },
   });
 
   await tx.flag.deleteMany({ where: { runId, planHash: hash } });

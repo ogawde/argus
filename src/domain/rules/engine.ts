@@ -7,7 +7,9 @@ import { ruleDormantReactivation } from "./dormant-reactivation";
 import { ruleDuplicateInBatch } from "./duplicate-in-batch";
 import { ruleDuplicatePaymentWindow } from "./duplicate-payment-window";
 import { ruleNewPayee } from "./new-payee";
-import type { RuleContext, RuleFn } from "./types";
+import { ruleSharedDestination } from "./shared-destination";
+import type { ElasticRuleInputs, RuleContext, RuleFn } from "./types";
+import { ruleVelocitySpike } from "./velocity-spike";
 
 /** Phase 2 domain rules only (no Elastic). */
 export const PHASE2_RULES: RuleFn[] = [
@@ -35,6 +37,18 @@ function dedupeFlags(flags: Flag[]): Flag[] {
 export function runPhase2Rules(ctx: RuleContext): Flag[] {
   const all = PHASE2_RULES.flatMap((r) => r(ctx));
   return dedupeFlags(all);
+}
+
+/**
+ * Phase 3 Elastic rules (VELOCITY_SPIKE, SHARED_DESTINATION).
+ * Planning fetches `ElasticRuleInputs` with `fetchElasticRuleInputs()` and merges the
+ * result with `runPhase2Rules()`.
+ */
+export function runPhase3ElasticRules(ctx: RuleContext, inputs: ElasticRuleInputs): Flag[] {
+  return dedupeFlags([
+    ...ruleVelocitySpike(ctx, inputs.velocityHits),
+    ...ruleSharedDestination(ctx, inputs.sharedDestinations),
+  ]);
 }
 
 export function buildAnalysis(
