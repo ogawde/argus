@@ -1,15 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
-  DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
+  DialogOverlay,
+  DialogPortal,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Dialog as DialogPrimitive } from "radix-ui";
+import { cn } from "cn";
+import { XIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
 export interface ReasonRequest {
@@ -37,13 +41,32 @@ export function ReasonDialog({
   onSubmit: (reason: string) => void;
 }) {
   return (
-    <Dialog open={request !== null} onOpenChange={(open) => (!open && !isBusy ? onCancel() : undefined)}>
-      <DialogContent className="sm:max-w-md">
-        {/* key resets the typed text every time the dialog opens for a new request */}
-        {request ? (
-          <ReasonForm key={request.title + request.description} request={request} isBusy={isBusy} error={error} onCancel={onCancel} onSubmit={onSubmit} />
-        ) : null}
-      </DialogContent>
+    // Non-modal so the reviewer can scroll back to the grid while deciding.
+    <Dialog modal={false} open={request !== null} onOpenChange={(open) => (!open && !isBusy ? onCancel() : undefined)}>
+      <DialogPortal>
+        <DialogOverlay className="pointer-events-none bg-black/25" />
+        <DialogPrimitive.Content
+          data-slot="dialog-content"
+          className={cn(
+            "fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border bg-background p-6 shadow-lg outline-none sm:max-w-md",
+          )}
+          onOpenAutoFocus={(event) => event.preventDefault()}
+          onPointerDownOutside={(event) => event.preventDefault()}
+          onInteractOutside={(event) => event.preventDefault()}
+          onFocusOutside={(event) => event.preventDefault()}
+        >
+          {request ? (
+            <ReasonForm key={request.title + request.description} request={request} isBusy={isBusy} error={error} onCancel={onCancel} onSubmit={onSubmit} />
+          ) : null}
+          <DialogPrimitive.Close
+            className="absolute top-4 right-4 rounded-xs opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none"
+            disabled={isBusy}
+          >
+            <XIcon className="size-4" />
+            <span className="sr-only">Close</span>
+          </DialogPrimitive.Close>
+        </DialogPrimitive.Content>
+      </DialogPortal>
     </Dialog>
   );
 }
@@ -64,6 +87,13 @@ function ReasonForm({
   const [reason, setReason] = useState(request.defaultReason ?? "");
   const canSubmit = reason.trim().length >= 3 && !isBusy;
 
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => {
+      document.getElementById("reason-input")?.focus({ preventScroll: true });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, []);
+
   return (
     <form
       onSubmit={(event) => {
@@ -83,7 +113,6 @@ function ReasonForm({
         </label>
         <Input
           id="reason-input"
-          autoFocus
           value={reason}
           onChange={(event) => setReason(event.target.value)}
           placeholder="Why is this the right call?"
