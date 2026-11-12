@@ -190,8 +190,8 @@
   }
 }
 
-/* keep the app above the grain layer */
-body > * {
+/* keep the app above the grain layer. Portaled dialogs are also direct children of body, and this rule must not turn their fixed positioning back into relative. */
+body > *:not([role="dialog"]):not([data-slot="dialog-overlay"]) {
   position: relative;
   z-index: 1;
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -41,19 +41,22 @@ export function ReasonDialog({
   onSubmit: (reason: string) => void;
 }) {
   return (
-    // Non-modal so the reviewer can scroll back to the grid while deciding.
-    <Dialog modal={false} open={request !== null} onOpenChange={(open) => (!open && !isBusy ? onCancel() : undefined)}>
+    <Dialog open={request !== null} onOpenChange={(open) => (!open && !isBusy ? onCancel() : undefined)}>
       <DialogPortal>
-        <DialogOverlay className="pointer-events-none bg-black/25" />
+        <DialogOverlay
+          className="bg-black/40 backdrop-blur-sm"
+          style={{ position: "fixed", inset: 0, zIndex: 50 }}
+        />
         <DialogPrimitive.Content
           data-slot="dialog-content"
           className={cn(
-            "fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border bg-background p-6 shadow-lg outline-none sm:max-w-md",
+            "z-50 grid w-full max-w-[calc(100%-2rem)] gap-4 rounded-lg border bg-background p-6 shadow-lg outline-none sm:max-w-md",
           )}
-          onOpenAutoFocus={(event) => event.preventDefault()}
-          onPointerDownOutside={(event) => event.preventDefault()}
-          onInteractOutside={(event) => event.preventDefault()}
-          onFocusOutside={(event) => event.preventDefault()}
+          style={{ position: "fixed", top: "50%", left: "50%", transform: "translate(-50%, -50%)", zIndex: 51 }}
+          onOpenAutoFocus={(event) => {
+            event.preventDefault();
+            document.getElementById("reason-input")?.focus({ preventScroll: true });
+          }}
         >
           {request ? (
             <ReasonForm key={request.title + request.description} request={request} isBusy={isBusy} error={error} onCancel={onCancel} onSubmit={onSubmit} />
@@ -86,13 +89,6 @@ function ReasonForm({
 }) {
   const [reason, setReason] = useState(request.defaultReason ?? "");
   const canSubmit = reason.trim().length >= 3 && !isBusy;
-
-  useEffect(() => {
-    const frame = requestAnimationFrame(() => {
-      document.getElementById("reason-input")?.focus({ preventScroll: true });
-    });
-    return () => cancelAnimationFrame(frame);
-  }, []);
 
   return (
     <form
